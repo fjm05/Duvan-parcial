@@ -124,3 +124,19 @@ npm run typecheck
 No se solicitan frontend, autenticación, JWT, Passport, despliegue, librerías adicionales, pipes personalizados ni pruebas automatizadas de controladores.
 
 Para detener únicamente la base de este proyecto conservando sus datos, ejecutar `docker compose stop` desde esta carpeta. No utilizar `down -v` para solucionar errores: eliminaría los datos del volumen. La sincronización de tablas está habilitada solo para esta base local descartable; no usar información real.
+
+## 5. Cambios realizados
+
+Se completaron los siete archivos de trabajo. No se modificaron la configuración, las entidades, los métodos resueltos, el cargador de datos ni el pipe compartido.
+
+| Archivo | Cambio |
+| --- | --- |
+| `src/reservations/dto/create-reservation.dto.ts` | `purpose` con `@IsString()`, `@IsNotEmpty()` y `@MaxLength(80)`. `participants` con `@IsInt()`, `@Min(1)` y `@Max(20)`. `roomId` con `@IsInt()` y `@Min(1)`. |
+| `src/reservations/reservations.controller.ts` | `POST /api/reservations` con `@Body(requestValidationPipe)`, que delega en `create()`. `PATCH /api/reservations/:id/cancel` con `ParseIntPipe`, sin body, que delega en `cancel()`. |
+| `src/reservations/reservation-rules.service.ts` | `ensureCanCancel()` lanza `ConflictException` si la reserva está `cancelled`. No consulta ni guarda. |
+| `src/reservations/reservations.service.ts` | Inyecta `ReservationRulesService` por constructor. `cancel(id)` usa `findOne()`, llama a la regla, cambia el estado a `cancelled`, guarda con el repositorio y devuelve su resultado. |
+| `src/reservations/reservations.module.ts` | Registra `ReservationRulesService` como proveedor. |
+| `src/reservations/reservation-rules.service.spec.ts` | Prueba 1: la regla real rechaza una reserva cancelada con `ConflictException`. |
+| `src/reservations/reservations.service.spec.ts` | Prueba 2: el servicio cancela, llama a la regla, guarda con estado `cancelled` y devuelve el resultado de `save()`. Prueba 3: si la regla simulada rechaza, se propaga `ConflictException`, el estado sigue `active` y `save()` no se llama. |
+
+Las respuestas de los endpoints y el resumen de `npm test` están en `exam-results.md`.
