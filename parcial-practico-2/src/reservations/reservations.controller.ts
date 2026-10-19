@@ -7,11 +7,16 @@ import { ReservationsService } from './reservations.service';
 export class ReservationsController {
   constructor(private readonly reservationsService: ReservationsService) {}
 
-  // TODO 1: Implement POST /api/reservations with a validated CreateReservationDto.
+  @Post()
+  create(@Body(requestValidationPipe) dto: CreateReservationDto) {
+    return this.reservationsService.create(dto);
+  }
 
-  // TODO 2: Implement PATCH /api/reservations/:id/cancel with ParseIntPipe and no body.
+  @Patch(':id/cancel')
+  cancel(@Param('id', ParseIntPipe) id: number) {
+    return this.reservationsService.cancel(id);
+  }
 
-  // The endpoints below are completed. Do not change them.
   @Get()
   findAll() {
     return this.reservationsService.findAll();
