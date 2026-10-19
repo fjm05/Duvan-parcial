@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, NotImplementedException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RoomEntity } from '../rooms/entities/room.entity';
@@ -13,15 +13,16 @@ export class ReservationsService {
     private readonly reservationsRepository: Repository<ReservationEntity>,
     @InjectRepository(RoomEntity)
     private readonly roomsRepository: Repository<RoomEntity>,
-    // TODO 2: Inject ReservationRulesService through this constructor.
+    private readonly reservationRulesService: ReservationRulesService,
   ) {}
 
   async cancel(id: number): Promise<ReservationEntity> {
-    // TODO 2: Coordinate the operation according to the examination.
-    throw new NotImplementedException('TODO 2: implement cancellation');
+    const reservation = await this.findOne(id);
+    this.reservationRulesService.ensureCanCancel(reservation);
+    reservation.status = 'cancelled';
+    return this.reservationsRepository.save(reservation);
   }
 
-  // The methods below are completed. Do not change them.
   async create(dto: CreateReservationDto): Promise<ReservationEntity> {
     const room = await this.roomsRepository.findOneBy({ id: dto.roomId });
     if (!room) throw new NotFoundException('Room was not found');
